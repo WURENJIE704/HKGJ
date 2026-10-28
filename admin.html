@@ -1,0 +1,533 @@
+﻿<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>授权管理后台</title>
+<style>
+*{box-sizing:border-box}body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;margin:0;background:#f4f7fa;color:#1f2937;min-height:100vh;position:relative}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(640px 420px at 10% 12%,rgba(240,169,59,.09),transparent 65%),radial-gradient(720px 520px at 90% 20%,rgba(20,122,158,.11),transparent 65%),radial-gradient(800px 600px at 50% 92%,rgba(15,118,110,.08),transparent 70%)}
+.wrap{max-width:1600px;margin:0 auto;padding:20px;position:relative;z-index:1}
+/* 液态玻璃顶栏（全局应用到后台） */
+.topbar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.68);backdrop-filter:blur(26px) saturate(190%);-webkit-backdrop-filter:blur(26px) saturate(190%);border-bottom:1px solid rgba(11,31,51,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(11,31,51,.04);border-radius:0 0 16px 16px;padding:14px 20px;margin:-20px -20px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.topbar h1{margin:0;font-size:20px;color:#0B1F33}
+.topbar .tb-sub{margin-left:auto;font-size:12px;color:#64748b}
+.card{background:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.95);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(11,31,51,.05),0 20px 50px rgba(11,31,51,.08);backdrop-filter:blur(20px) saturate(170%);-webkit-backdrop-filter:blur(20px) saturate(170%)}
+label{display:block;font-size:12px;color:#5a6b7c;margin:8px 0 4px}
+input,select{width:100%;border:1px solid #d8e0e8;border-radius:6px;padding:8px;font-size:13px;background:#fff;color:#1f2937}
+input::placeholder{color:#94a3b8}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>div{flex:1;min-width:140px}
+button{border:none;border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;background:#0f766e;color:#fff;box-shadow:0 4px 12px rgba(2,10,22,.12)}
+button.sec{background:#475569}button.danger{background:#b91c1c}button.okbtn{background:#15803d}button:disabled{opacity:.5;cursor:not-allowed}a.dial{display:inline-block;background:#0f766e;color:#fff;border-radius:6px;padding:4px 8px;font-size:12px;text-decoration:none;margin-left:4px}a.dial:hover{background:#115e59}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #e4e9ef;padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#f1f5f9;color:#334155}td{color:#1f2937}
+.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px}
+.badge.ok{background:#dcfce7;color:#166534}.badge.err{background:#fee2e2;color:#991b1b}.badge.warn{background:#fef3c7;color:#92400e}
+.key-box{background:#f8fafc;border:1px dashed #cbd2da;border-radius:6px;padding:10px;font-family:monospace;font-size:11px;word-break:break-all;margin-top:8px;color:#0f172a}
+.dev{display:inline-block;margin:2px;padding:1px 6px;background:#eef2f7;border-radius:4px;font-family:monospace;font-size:11px;color:#334155}
+.msg{font-size:12px;margin-top:8px}.msg.ok{color:#166534}.msg.err{color:#b91c1c}
+.muted{color:#64748b;font-size:12px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.95);border-radius:12px;padding:10px 12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(11,31,51,.04),0 8px 24px rgba(11,31,51,.06)}
+.stat b{display:block;font-size:20px;color:#1D4ED8}.stat span{font-size:12px;color:#64748b}
+/* 统计卡片按功能类型配色：授权/收入/落地页/下载/用户/号码各自专属色 */
+.stat.rev b{color:#059669}
+.stat.lan b{color:#0891B2}
+.stat.dlc b{color:#7C3AED}
+.stat.usr b{color:#EA580C}
+.stat.num b{color:#E11D48}
+.dev-btn{border:none;background:#dc2626;color:#fff;border-radius:4px;font-size:10px;padding:1px 6px;margin-left:4px;cursor:pointer}
+.dev-btn.off{background:#9ca3af}
+.search-row{display:flex;gap:8px;align-items:center;margin:10px 0}
+.search-row input{flex:1;min-width:180px}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.4);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;backdrop-filter:blur(5px) saturate(130%);-webkit-backdrop-filter:blur(5px) saturate(130%)}
+.modal-box{background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(255,255,255,.9));border-radius:16px;padding:18px 20px;width:380px;max-width:94vw;box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 30px 70px rgba(2,10,22,.25);color:#1f2937}
+.modal-box h3{margin:0 0 12px;font-size:15px;color:#0B1F33}.modal-box .row{margin-top:14px}.modal-box .msg{margin-top:10px}
+.modal-box label{color:#5a6b7c}.modal-box input,.modal-box select{background:#fff;color:#1f2937;border-color:#d8e0e8}
+.modal-box .key-box{background:#f8fafc;color:#0f172a;border-color:#cbd2da}
+.modal-box table th{background:#f0f3f7;color:#334155}.modal-box table td{color:#1f2937}
+@media (max-width:760px){
+  .wrap{padding:12px}
+  .topbar{margin:-12px -12px 14px;padding:12px 14px;border-radius:0 0 12px 12px}
+  h1{font-size:17px}
+  .card{padding:12px}
+  .row{gap:8px}
+  .row>div{min-width:100%}
+  .stat-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .stat{padding:8px 10px}
+  .stat b{font-size:17px}
+  .search-row{flex-wrap:wrap}
+  .search-row input{min-width:100%}
+  table{font-size:11px}
+  th,td{padding:5px 6px}
+  button{padding:8px 10px}
+  /* 手机端隐藏次要列，只保留核心信息 */
+  table.hide-cols td:nth-child(4), table.hide-cols th:nth-child(4),
+  table.hide-cols td:nth-child(5), table.hide-cols th:nth-child(5){display:none}
+  table.hide-cols2 td:nth-child(6), table.hide-cols2 th:nth-child(6){display:none}
+  .ops button{padding:4px 7px;font-size:10px;margin:2px 0;display:block;width:100%}
+  .dev{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+  .key-box{font-size:10px}
+  h3{font-size:14px}
+}
+</style></head><body>
+<div class="wrap">
+<div class="topbar"><h1>授权管理后台</h1><span class="tb-sub" id="hostTip"></span></div>
+<div id="loginCard" class="card">
+  <label>管理员口令</label>
+  <div class="row"><div><input id="pwd" type="password" placeholder="输入管理员口令"></div><div><button id="loginBtn" style="width:100%">登录</button></div></div>
+  <p class="msg" id="loginMsg"></p>
+</div>
+<div id="adminCard" class="card" style="display:none">
+  <div class="row" style="margin-bottom:10px"><span class="muted">已登录，会话 12 小时内有效</span><button class="sec" id="logoutBtn" style="margin-left:auto">退出登录</button></div>
+  <h3 style="margin:4px 0 8px">总控面板</h3>
+  <div class="stat-grid" id="statsPanel"><div class="stat"><span>加载中…</span></div></div>
+  <h3 style="margin:4px 0">一键生成授权码</h3>
+  <div class="row">
+    <div><label>套餐</label><select id="plan"><option value="trial">免费试用(3天/30个号码)</option><option value="month">月卡(按时间畅采)</option><option value="pro" selected>专业版(按量扣点)</option><option value="lifetime">终身版(无时间限制)</option></select></div>
+    <div><label>时长(天)</label><input id="days" type="number" min="1" value="30"></div>
+    <div><label>初始点数(专业版/试用)</label><input id="points" type="number" min="0" value="100" placeholder="专业版填点数，月卡/终身版不限"></div>
+    <div><label>允许设备数</label><input id="maxDev" type="number" min="1" max="20" value="2"></div>
+    <div><label>客户名(选填)</label><input id="name" type="text" placeholder="例如 张老板"></div>
+    <div><label>绑定注册用户(选填)</label><select id="genUser"><option value="">不绑定</option></select></div>
+    <div><label>&nbsp;</label><button id="genBtn" style="width:100%">生成授权码</button></div>
+  </div>
+  <div id="genResult"></div>
+  <h3 style="margin:14px 0 6px">授权记录 <button class="sec" id="refreshKeysBtn" style="margin-left:8px">刷新列表</button><span class="muted" id="autoRefreshTip" style="margin-left:8px">（每10秒自动刷新）</span></h3>
+  <div class="search-row"><input id="searchInput" type="text" placeholder="搜索授权ID / 客户名 / 套餐 / 到期日期…" oninput="refresh()"><span class="muted">按关键字过滤记录</span></div>
+  <div style="overflow-x:auto"><table class="hide-cols2">
+    <thead><tr><th>授权ID</th><th>套餐</th><th>客户</th><th>到期</th><th>设备</th><th>激活设备(激活时间)</th><th>点数</th><th>AI 剩余</th><th>状态</th><th>操作</th></tr></thead>
+    <tbody id="keyRows"></tbody>
+  </table></div>
+  <p class="msg" id="listMsg"></p>
+</div>
+<div id="adminExtra" style="display:none">
+<div class="card">
+  <h3 style="margin:4px 0 8px">套餐定价与导出设置 <span class="muted">（客户充值面板显示的价格，保存后自动同步到插件）</span></h3>
+  <div class="row">
+    <div><label>免费试用 价格(元)</label><input id="p_trial_price" type="number" min="0" step="0.01" value="0"></div>
+    <div><label>免费试用 天数</label><input id="p_trial_days" type="number" min="1" value="3"></div>
+    <div><label>免费试用 点数</label><input id="p_trial_points" type="number" min="0" value="30"></div>
+    <div><label>免费试用 说明</label><input id="p_trial_desc" type="text" value="3天/30个号码，仅日本站"></div>
+  </div>
+  <div class="row">
+    <div><label>月卡 价格(元)</label><input id="p_month_price" type="number" min="0" step="0.01" value="39"></div>
+    <div><label>月卡 天数</label><input id="p_month_days" type="number" min="1" value="30"></div>
+    <div><label>月卡 每日导出次数</label><input id="p_month_export" type="number" min="0" value="1"></div>
+    <div><label>月卡 说明</label><input id="p_month_desc" type="text" value="按时间畅采，不限点数"></div>
+  </div>
+  <div class="row">
+    <div><label>专业版 价格(元)</label><input id="p_pro_price" type="number" min="0" step="0.01" value="99"></div>
+    <div><label>专业版 天数</label><input id="p_pro_days" type="number" min="1" value="30"></div>
+    <div><label>专业版 含点数</label><input id="p_pro_points" type="number" min="0" value="500"></div>
+    <div><label>专业版 说明</label><input id="p_pro_desc" type="text" value="按量扣点，1号码=1点"></div>
+  </div>
+  <div class="row">
+    <div><label>终身版 价格(元)</label><input id="p_lifetime_price" type="number" min="0" step="0.01" value="299"></div>
+    <div><label>终身版 天数(0=终身)</label><input id="p_lifetime_days" type="number" min="0" value="0"></div>
+    <div><label>终身版 点数</label><input id="p_lifetime_points" type="number" min="0" value="0"></div>
+    <div><label>终身版 说明</label><input id="p_lifetime_desc" type="text" value="买断，无时间限制"></div>
+  </div>
+  <p class="msg" id="pricingMsg"></p>
+  <div class="row"><button onclick="savePricing()">保存定价</button><button class="sec" onclick="saveExportLimit()">保存月卡导出次数</button><span class="muted" style="align-self:center">说明：专业版/试用充值时按“含点数/价格”比例折算单点价格</span></div>
+</div>
+<div class="card">
+  <h3 style="margin:4px 0 8px">收款码（客户在插件充值面板付款用）</h3>
+  <div class="row">
+    <div>
+      <label>支付宝收款码</label>
+      <img id="alipayPreview" style="max-width:160px;display:none;border:1px solid #e2e6ea;border-radius:6px" alt="支付宝收款码">
+      <input id="alipayFile" type="file" accept="image/*">
+      <button onclick="uploadPayCode('alipay')">上传支付宝收款码</button>
+    </div>
+    <div>
+      <label>微信收款码</label>
+      <img id="wechatPreview" style="max-width:160px;display:none;border:1px solid #e2e6ea;border-radius:6px" alt="微信收款码">
+      <input id="wechatFile" type="file" accept="image/*">
+      <button onclick="uploadPayCode('wechat')">上传微信收款码</button>
+    </div>
+  </div>
+  <p class="msg" id="paycodeMsg"></p>
+</div>
+<div class="card">
+  <h3 style="margin:4px 0 8px">AI 客服头像（落地页聊天窗口显示）</h3>
+  <div class="row">
+    <div>
+      <label>AI客服头像</label>
+      <img id="aiAvatarPreview" style="width:60px;height:60px;border-radius:50%;display:none;border:1px solid #e2e6ea;object-fit:cover" alt="AI客服头像">
+      <input id="aiAvatarFile" type="file" accept="image/*">
+      <button onclick="uploadAiAvatar()">上传AI客服头像</button>
+    </div>
+  </div>
+  <p class="msg" id="aiAvatarMsg"></p>
+</div>
+<div class="card">
+  <h3 style="margin:4px 0 8px">客户充值订单审核 <button class="sec" id="refreshOrdersBtn" style="margin-left:8px" onclick="loadOrders()">刷新订单</button><span class="muted" style="margin-left:8px">（审核通过后自动发放权益，客户无需换码）</span></h3>
+  <div style="overflow-x:auto"><table>
+    <thead><tr><th>订单号</th><th>授权ID</th><th>类型</th><th>套餐/点数</th><th>金额</th><th>支付方式</th><th>截图</th><th>提交时间</th><th>状态</th><th>操作</th></tr></thead>
+    <tbody id="orderRows"></tbody>
+  </table></div>
+  <p class="msg" id="orderMsg"></p>
+</div>
+<div class="card">
+  <h3 style="margin:4px 0 8px">注册用户管理 <button class="sec" id="refreshUsersBtn" style="margin-left:8px" onclick="loadUsers()">刷新用户</button><span class="muted" style="margin-left:8px">（落地页注册用户，可搜索、查看使用情况并绑定授权ID）</span></h3>
+  <div class="search-row"><input id="userSearchInput" type="text" placeholder="搜索昵称 / 账号 / 授权码…" oninput="filterUsers()"><span class="muted">按关键字过滤</span></div>
+  <div style="overflow-x:auto"><table>
+    <thead><tr><th>用户</th><th>账号</th><th>注册时间</th><th>最后登录</th><th>登录次数</th><th>绑定授权码</th><th>套餐</th><th>剩余点数</th><th>到期时间</th><th>激活设备</th><th>插件使用次数</th><th>操作(绑定授权ID)</th></tr></thead>
+    <tbody id="userRows"></tbody>
+  </table></div>
+  <p class="msg" id="userMsg"></p>
+</div>
+<div class="card">
+  <h3 style="margin:4px 0 8px">插件版本与更新推送</h3>
+  <div class="row">
+    <div><label>当前插件版本</label><input id="pvVersion" readonly style="background:#f1f5f9"></div>
+    <div><label>下载地址</label><input id="pvUrl" readonly style="background:#f1f5f9"></div>
+  </div>
+  <div class="row">
+    <div style="flex:1"><label>更新公告（发布后推送给所有客户，插件与落地页显示提醒）</label><textarea id="pvNotice" rows="2" style="width:100%;box-sizing:border-box" placeholder="例如：v2.4.5 已发布，新增一键自动更新，请点击插件内更新按钮"></textarea></div>
+  </div>
+  <div class="row"><button onclick="saveNotice()">发布新版（自动重建下载包）</button><span class="muted" id="pvMsg" style="align-self:center"></span></div>
+</div>
+<div class="card">
+  <h3 style="margin:4px 0 8px">号码库导出 <button class="sec" id="refreshNumsBtn" style="margin-left:8px" onclick="loadNumbers()">刷新号码</button><span class="muted" style="margin-left:8px">（客户插件采集的有效号码实时同步至此；导出格式与插件端一致，500 个自动提醒）</span></h3>  <div class="row">
+    <div><label>号码总数</label><input id="numTotalInput" readonly style="background:#f1f5f9"></div>
+    <div><label>涉及客户数</label><input id="numKeysInput" readonly style="background:#f1f5f9"></div>
+  </div>
+  <div class="row">
+    <label style="align-items:center;display:flex;gap:6px"><input type="checkbox" id="hideViewedNums" onchange="loadNumbers()"> 隐藏已查看（复制后标记为已查看，与插件逻辑一致）</label>
+  </div>
+  <div class="row">
+    <label>站点筛选：<select id="numSiteFilter" onchange="loadNumbers()" style="padding:6px 10px">
+      <option value="">全部站点</option>
+      <option value="亚马逊日本站">亚马逊日本站</option>
+      <option value="亚马逊美国站">亚马逊美国站</option>
+      <option value="亚马逊英国站">亚马逊英国站</option>
+      <option value="亚马逊德国站">亚马逊德国站</option>
+      <option value="亚马逊加拿大站">亚马逊加拿大站</option>
+      <option value="亚马逊澳洲站">亚马逊澳洲站</option>
+      <option value="阿里巴巴国际站">阿里巴巴国际站</option>
+      <option value="其他站点">其他站点</option>
+    </select></label>
+    <button onclick="copyAllNumbers()">快速复制全部号码</button>
+    <label style="align-items:center;display:flex;gap:4px;font-size:13px">身份:
+      <select id="adminAiIdentity" style="padding:5px 8px;border:1px solid #d8dbe0;border-radius:6px;font-size:13px">
+        <option value="supplier">供应链/工厂</option>
+        <option value="agency">代运营</option>
+        <option value="erp">ERP系统</option>
+        <option value="logistics">物流货代</option>
+      </select>
+    </label>
+    <button onclick="adminAiBatchAnalyze()" style="background:linear-gradient(135deg,#F0A93B,#d4912a);color:#0B1F33;font-weight:700">批量AI分析</button>
+    <button onclick="exportNumbersCsv()">导出 CSV 文件</button>
+    <button onclick="exportNumbersExcel()">导出 Excel 文件</button>
+    <label style="align-items:center;display:flex;gap:4px;font-size:13px"><input type="checkbox" id="adminExportDraft" checked> 导出含开发信/话术</label>
+    <button class="danger" onclick="clearNumbers()">清空号码库</button>
+  </div>
+  <p class="msg" id="numMsg"></p>
+  <div style="overflow-x:auto"><table class="hide-cols">
+    <thead><tr><th>站点</th><th>品名</th><th>店铺名</th><th>手机号</th><th>号码类型</th><th>AI 分析（公司/标签）</th><th>来源页</th><th>采集时间</th><th>客户</th><th>操作</th></tr></thead>
+    <tbody id="numRows"></tbody>
+  </table></div>
+</div>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);let token=localStorage.getItem("lic_token")||"";let userCache=[];
+async function approveOrder(orderId){reviewOrder(orderId,"approve");}
+async function rejectOrder(orderId){reviewOrder(orderId,"reject");}
+/* ===== 号码库导出（格式与插件端一致） ===== */
+let NUM_ITEMS=[];
+function numPhoneDigits(phone){let d=String(phone||"").replace(/\\D/g,"");if(d.startsWith("0086"))d=d.slice(4);while(d.startsWith("86")&&d.length>11)d=d.slice(2);return d;}
+function numIsChina(phone){return /^1[3-9]\\d{9}$/.test(numPhoneDigits(phone));}
+function numFmtPhone(phone){return numIsChina(phone)?numPhoneDigits(phone):String(phone||"").replace(/^\\+86/,"");}
+function numEscCsv(v){const t=String(v==null?"":v);return /[",\\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t;}
+function numEscXml(v){return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");}
+function numTime(ts){if(!ts)return "";const d=new Date(ts);return (d.getMonth()+1)+"-"+d.getDate()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);}
+function numDedupe(list){const map=new Map();list.forEach(item=>{const raw=String(item.phone||"");if(!raw)return;const nc=numIsChina(raw)?numPhoneDigits(raw):"";const key=nc||raw;const nItem=nc?Object.assign({},item,{phone:nc}):item;const prev=map.get(key);const seller=(item.seller||"页面公开信息").trim();if(!prev){map.set(key,Object.assign({},nItem,{sellers:seller?[seller]:[]}));return;}const sellers=new Set((prev.sellers||[]).concat(seller?[seller]:[]));const useCurrent=(nItem.createdAt||0)>(prev.createdAt||0);map.set(key,Object.assign({},(useCurrent?nItem:prev),{sellers:[...sellers]}));});return [...map.values()];}
+function numType(item){return numIsChina(item.phone)?"中国大陆手机号":"非中国手机号（跳过）";}
+function numSite(url){try{const h=new URL(String(url||"")).hostname.toLowerCase();if(h.includes("amazon.co.jp"))return "亚马逊日本站";if(h.includes("amazon.co.uk"))return "亚马逊英国站";if(h.includes("amazon.de"))return "亚马逊德国站";if(h.includes("amazon.ca"))return "亚马逊加拿大站";if(h.includes("amazon.com.au"))return "亚马逊澳洲站";if(h.includes("amazon.com"))return "亚马逊美国站";if(h.includes("alibaba.com"))return "阿里巴巴国际站";return "其他站点";}catch(_e){return "其他站点";}}
+function numStamp(){const d=new Date();return ""+d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")+"-"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0")+String(d.getSeconds()).padStart(2,"0");}
+function numDownload(filename,blob){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);}
+async function loadNumbers(){const res=await api("/api/numbers");if(!res.ok){$("numMsg").textContent=res.message||"加载失败";$("numMsg").className="msg err";return;}NUM_ITEMS=res.items||[];const viewedIds=new Set(NUM_ITEMS.filter(i=>i.viewedAt).map(i=>String(i.id)));const hideViewed=$("hideViewedNums")&&$("hideViewedNums").checked;const siteFilter=$("numSiteFilter")?$("numSiteFilter").value:"";$("numTotalInput").value=NUM_ITEMS.length+" 个";const keys=new Set(NUM_ITEMS.map(i=>i.keyId));$("numKeysInput").value=keys.size+" 个";const base=numDedupe(NUM_ITEMS).sort((a,b)=>b.createdAt-a.createdAt);let deduped=hideViewed?base.filter(i=>!viewedIds.has(String(i.id))):base;if(siteFilter)deduped=deduped.filter(i=>numSite(i.url)===siteFilter);const groups={};deduped.forEach(item=>{const s=numSite(item.url);if(!groups[s])groups[s]=[];groups[s].push(item);});let rows="";Object.keys(groups).sort().forEach(site=>{const items=groups[site];const groupId="grp-"+site.replace(/[^a-z0-9]/gi,"");rows+='<tr class="site-group-head" data-group="'+groupId+'" style="background:linear-gradient(90deg,#e8eef5,#f4f7fa);cursor:pointer;font-weight:700"><td colspan="10" style="padding:8px 12px">▼ '+numEscXml(site)+' <span style="font-weight:400;color:#52657A">（'+items.length+' 条）</span></td></tr>';items.forEach(item=>{const sellerText=(item.sellers&&item.sellers.length)?item.sellers.join(" / "):(item.seller||"页面公开信息");const fp=numFmtPhone(item.phone);const telHref=numIsChina(item.phone)?("tel:+86"+numPhoneDigits(item.phone)):("tel:"+fp);const viewed=viewedIds.has(String(item.id));const ai=item.aiProfile||{};const aiText=ai.company?((ai.company)+(Array.isArray(ai.tags)&&ai.tags.length?" · "+ai.tags.join("/"):"")):"<span class='muted'>未分析</span>";rows+='<tr class="site-group-body" data-group="'+groupId+'" data-id="'+numEscXml(item.id)+'" data-phone="'+numEscXml(fp)+'"'+(viewed?' style="opacity:.55;background:#f3f6f9"':"")+'><td>'+numEscXml(site)+'</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+numEscXml(item.title||"")+'</td><td>'+numEscXml(sellerText)+'</td><td>'+numEscXml(fp)+(viewed?' <span style="display:inline-block;background:#F0A93B;color:#0B1F33;font-size:11px;font-weight:700;padding:1px 7px;border-radius:100px;margin-left:4px">已查看</span>':"")+'</td><td>'+numType(item)+'</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+numEscXml(ai.company||"")+" "+numEscXml(ai.address||"")+'">'+aiText+'</td><td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+numEscXml(item.url||"")+'</td><td>'+numTime(item.createdAt)+'</td><td>'+numEscXml(item.uploaderAccount||item.keyId||"")+'</td><td><button class="sec num-copy">复制</button> <a class="dial" href="'+telHref+'">拨号</a> <button class="danger num-del">删除</button></td></tr>';});});$("numRows").innerHTML=rows||'<tr><td colspan="10" class="muted">暂无号码（客户插件采集后会实时同步到这里）</td></tr>';$("numRows").querySelectorAll(".site-group-head").forEach(h=>{h.addEventListener("click",function(){const g=this.getAttribute("data-group");const bodies=$("numRows").querySelectorAll('.site-group-body[data-group="'+g+'"]');const hidden=bodies.length&&bodies[0].style.display==="none";bodies.forEach(b=>{b.style.display=hidden?"":"none";});this.cells[0].childNodes[0].textContent=hidden?"▼ ":"▶ ";});});$("numMsg").textContent="已加载 "+NUM_ITEMS.length+" 条（已查看 "+viewedIds.size+" 个"+(hideViewed?"，已隐藏已查看":"")+(siteFilter?"，筛选："+siteFilter:"")+"，去重后共 "+deduped.length+" 条，按站点分组，点击站点名可折叠）";$("numMsg").className="msg";}
+async function copyOneNumber(phone,id){if(!phone)return;try{await navigator.clipboard.writeText(String(phone));if(id){try{await api("/api/numbers/viewed",{ids:[id]});}catch(_e){}}loadNumbers();$("numMsg").textContent="已复制号码 "+phone+"，已标记为已查看";$("numMsg").className="msg";}catch(e){$("numMsg").textContent="复制失败，请手动选择";$("numMsg").className="msg err";}}
+$("numRows").addEventListener("click",function(e){const t=e.target;if(!t||!t.closest)return;const btn=t.closest("button,a");if(!btn)return;const tr=btn.closest("tr");if(!tr)return;if(btn.classList.contains("num-copy")){copyOneNumber(tr.getAttribute("data-phone")||"",tr.getAttribute("data-id")||"");}else if(btn.classList.contains("num-del")){delNumbers(tr.getAttribute("data-id")||"");}});
+$("numRows").addEventListener("click",function(e){const t=e.target;if(!t||!t.closest)return;const btn=t.closest("button,a");if(!btn)return;const tr=btn.closest("tr");if(!tr)return;if(btn.classList.contains("num-copy")){copyOneNumber(tr.getAttribute("data-phone")||"",tr.getAttribute("data-id")||"");}else if(btn.classList.contains("num-del")){delNumbers(tr.getAttribute("data-id")||"");}});
+$("numRows").addEventListener("click",function(e){const t=e.target;if(!t||!t.closest)return;const btn=t.closest("button,a");if(!btn)return;const tr=btn.closest("tr");if(!tr)return;if(btn.classList.contains("num-copy")){copyOneNumber(tr.getAttribute("data-phone")||"",tr.getAttribute("data-id")||"");}else if(btn.classList.contains("num-del")){delNumbers(tr.getAttribute("data-id")||"");}});
+$("numRows").addEventListener("click",function(e){const t=e.target;if(!t||!t.closest)return;const btn=t.closest("button,a");if(!btn)return;const tr=btn.closest("tr");if(!tr)return;if(btn.classList.contains("num-copy")){copyOneNumber(tr.getAttribute("data-phone")||"",tr.getAttribute("data-id")||"");}else if(btn.classList.contains("num-del")){delNumbers(tr.getAttribute("data-id")||"");}});
+$("numRows").addEventListener("click",function(e){const t=e.target;if(!t||!t.closest)return;const btn=t.closest("button,a");if(!btn)return;const tr=btn.closest("tr");if(!tr)return;if(btn.classList.contains("num-copy")){copyOneNumber(tr.getAttribute("data-phone")||"",tr.getAttribute("data-id")||"");}else if(btn.classList.contains("num-del")){delNumbers(tr.getAttribute("data-id")||"");}});
+function numSiteLabel(){var f=$("numSiteFilter");return (f&&f.value)?f.value:"全部站点";}
+function numBuildList(){var siteFilter=$("numSiteFilter")?$("numSiteFilter").value:"";var hideViewed=$("hideViewedNums")&&$("hideViewedNums").checked;var viewedIds=new Set(NUM_ITEMS.filter(function(i){return i.viewedAt;}).map(function(i){return String(i.id);}));var list=numDedupe(NUM_ITEMS).sort(function(a,b){return b.createdAt-a.createdAt;});if(hideViewed)list=list.filter(function(i){return !viewedIds.has(String(i.id));});if(siteFilter)list=list.filter(function(i){return numSite(i.url)===siteFilter;});return list;}
+async function copyAllNumbers(){if(!NUM_ITEMS.length){$("numMsg").textContent="号码库为空";return;}const list=numBuildList();if(!list.length){$("numMsg").textContent="当前站点筛选下没有号码";$("numMsg").className="msg err";return;}const text=list.map(i=>numFmtPhone(i.phone)).join("\\n");try{await navigator.clipboard.writeText(text);const ids=[...new Set(list.map(i=>String(i.id)))];try{await api("/api/numbers/viewed",{ids});}catch(_e){}loadNumbers();$("numMsg").textContent="已复制 "+list.length+" 个手机号（"+numSiteLabel()+"），已标记为已查看";$("numMsg").className="msg";}catch(e){$("numMsg").textContent="复制失败，请手动选择";$("numMsg").className="msg err";}}
+function exportNumbersCsv(){const list=numBuildList();if(!list.length){$("numMsg").textContent="号码库为空";return;}const batch="admin-"+Date.now().toString(36);const includeDraft=$("adminExportDraft")?$("adminExportDraft").checked:true;const header=includeDraft?["站点","品名","店铺名","手机号","号码类型","来源页","采集时间","导出批次","公司名","地址","联系人","LINE","WhatsApp","Instagram","画像标签","开发信/话术"]:["站点","品名","店铺名","手机号","号码类型","来源页","采集时间","导出批次","公司名","地址","联系人","LINE","WhatsApp","Instagram","画像标签"];const rows=list.map(item=>{const sellerText=(item.sellers&&item.sellers.length)?item.sellers.join(" / "):(item.seller||"页面公开信息");const ai=item.aiProfile||{};const baseCols=[numEscCsv(numSite(item.url)),numEscCsv(item.title||""),numEscCsv(sellerText),numEscCsv(numFmtPhone(item.phone)),numEscCsv(numType(item)),numEscCsv(item.url||""),numEscCsv(numTime(item.createdAt)),numEscCsv(batch),numEscCsv(ai.company||""),numEscCsv(ai.address||""),numEscCsv(ai.contactName||""),numEscCsv(ai.line||""),numEscCsv(ai.whatsapp||""),numEscCsv(ai.instagram||""),numEscCsv(Array.isArray(ai.tags)?ai.tags.join("/"):"")];if(includeDraft)baseCols.push(numEscCsv(ai.draft||""));return baseCols.join(",");});const watermark="# ============================================================\\n# 获客工具后台导出文件 · 防伪水印与免责声明\\n# ============================================================\\n# 导出者：管理后台管理员\\n# 导出时间："+new Date().toLocaleString("zh-CN")+"\\n# 导出批次："+batch+"\\n# ------------------------------------------------------------\\n# 【数据来源】本文件中的电话号码均采集自亚马逊/阿里巴巴等电商平台\\n# 卖家公开店铺页面（卖家自行公示的联系方式），非非法获取或窃取。\\n# ------------------------------------------------------------\\n# 【使用限制】\\n# 1. 本文件仅供合法商业获客用途使用，不得用于骚扰、诈骗、营销轰炸等违法活动；\\n# 2. 不得转售、传播、出租本文件，不得将数据用于任何非法用途；\\n# 3. 联系客户时请遵守《个人信息保护法》及相关法律法规，尊重对方拒绝意愿；\\n# 4. 开发者不对用户使用本数据的行为承担任何法律责任。\\n# ------------------------------------------------------------\\n# 【风险提醒】\\n# 1. 频繁批量采集可能触发亚马逊/阿里巴巴风控，导致 IP 被封、账号被限制；\\n# 2. 使用本工具产生的任何账号封禁、IP 封禁、资金损失等后果由用户自行承担；\\n# 3. 建议控制采集频率、模拟正常浏览行为，降低触发风控概率。\\n# ------------------------------------------------------------\\n# 本文件已内嵌导出批次溯源水印，如发生数据泄露可追溯导出者。\\n# ============================================================\\n";const csv="\uFEFF"+watermark+header.join(",")+"\\n"+rows.join("\\n");numDownload("phones-"+numSiteLabel().replace(/[\\/:*?"<>|]/g,"")+"-"+numStamp()+".csv",new Blob([csv],{type:"text/csv;charset=utf-8;"}));$("numMsg").textContent="CSV 已导出（"+numSiteLabel()+"），共 "+list.length+" 条（手机号去重后）";$("numMsg").className="msg";}
+function exportNumbersExcel(){const list=numBuildList();if(!list.length){$("numMsg").textContent="号码库为空";return;}const batch="admin-"+Date.now().toString(36);const includeDraft=$("adminExportDraft")?$("adminExportDraft").checked:true;const rows=list.map(item=>{const sellerText=(item.sellers&&item.sellers.length)?item.sellers.join(" / "):(item.seller||"页面公开信息");const ai=item.aiProfile||{};const cells=['<Cell><Data ss:Type="String">'+numEscXml(numSite(item.url))+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(item.title||"")+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(sellerText)+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(numFmtPhone(item.phone))+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(numType(item))+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(item.url||"")+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(numTime(item.createdAt))+'</Data></Cell><Cell><Data ss:Type="String">'+batch+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(ai.company||"")+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(ai.address||"")+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(ai.contactName||"")+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(ai.line||"")+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(ai.whatsapp||"")+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(ai.instagram||"")+'</Data></Cell><Cell><Data ss:Type="String">'+numEscXml(Array.isArray(ai.tags)?ai.tags.join("/"):"")+'</Data></Cell>'];if(includeDraft)cells.push('<Cell><Data ss:Type="String">'+numEscXml(ai.draft||"")+'</Data></Cell>');return '<Row>'+cells.join("")+'</Row>';}).join("");const xml='<?xml version="1.0" encoding="UTF-8"?>\\n<?mso-application progid="Excel.Sheet"?>\\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">\\n  <Worksheet ss:Name="电话数据">\\n    <Table>\\n      <Row><Cell><Data ss:Type="String">站点</Data></Cell><Cell><Data ss:Type="String">品名</Data></Cell><Cell><Data ss:Type="String">店铺名</Data></Cell><Cell><Data ss:Type="String">手机号</Data></Cell><Cell><Data ss:Type="String">号码类型</Data></Cell><Cell><Data ss:Type="String">来源页</Data></Cell><Cell><Data ss:Type="String">采集时间</Data></Cell><Cell><Data ss:Type="String">导出批次</Data></Cell><Cell><Data ss:Type="String">公司名</Data></Cell><Cell><Data ss:Type="String">地址</Data></Cell><Cell><Data ss:Type="String">联系人</Data></Cell><Cell><Data ss:Type="String">LINE</Data></Cell><Cell><Data ss:Type="String">WhatsApp</Data></Cell><Cell><Data ss:Type="String">Instagram</Data></Cell><Cell><Data ss:Type="String">画像标签</Data></Cell>'+(includeDraft?'<Cell><Data ss:Type="String">开发信/话术</Data></Cell>':'')+'</Row>\\n      '+rows+'\\n      <Row><Cell><Data ss:Type="String">==== 获客工具后台导出文件 · 防伪水印与免责声明 ====</Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell></Row>\\n      <Row><Cell><Data ss:Type="String">导出者</Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String">管理后台管理员</Data></Cell><Cell><Data ss:Type="String">导出时间：'+new Date().toLocaleString("zh-CN")+'</Data></Cell><Cell><Data ss:Type="String">导出批次 '+batch+'</Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell></Row>\\n      <Row><Cell><Data ss:Type="String">数据来源：亚马逊/阿里巴巴卖家公开店铺页面（卖家自行公示的联系方式），非非法获取。</Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell></Row>\\n      <Row><Cell><Data ss:Type="String">使用限制：仅供合法商业获客，不得骚扰/诈骗/营销轰炸；不得转售/传播；遵守个人信息保护法；开发者不承担使用数据产生的法律责任。</Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell></Row>\\n      <Row><Cell><Data ss:Type="String">风险提醒：频繁采集可能触发平台风控导致IP/账号封禁，后果由用户自行承担；请控制频率、模拟正常浏览。</Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell><Cell><Data ss:Type="String"></Data></Cell></Row>\\n    </Table>\\n  </Worksheet>\\n</Workbook>';numDownload("phones-"+numSiteLabel().replace(/[\\/:*?"<>|]/g,"")+"-"+numStamp()+".xml",new Blob(["\uFEFF"+xml],{type:"application/vnd.ms-excel;charset=utf-8;"}));$("numMsg").textContent="Excel 已导出（"+numSiteLabel()+"），共 "+list.length+" 条（手机号去重后）";$("numMsg").className="msg";}
+async function adminAiBatchAnalyze(){const list=numBuildList().filter(i=>i.phone&&/^1[3-9]\\d{9}$/.test(String(i.phone).replace(/\\D/g,""))&&!(i.aiProfile&&i.aiProfile.company));if(!list.length){$("numMsg").textContent="没有待分析的中国手机号（全部已分析过）";return;}const keysRes=await api("/api/keys",{});const validKey=(keysRes.keys||[]).find(k=>!k.revoked&&(!k.exp||new Date(k.exp)>new Date())&&(k.plan==="pro"||k.plan==="lifetime"));if(!validKey){$("numMsg").textContent="没有找到有效的专业版/终身版授权码，无法批量分析";$("numMsg").className="msg err";return;}const identitySel=$("adminAiIdentity");const identity=identitySel?identitySel.value:"supplier";const identityText=identitySel?identitySel.options[identitySel.selectedIndex].text:"供应链/工厂";if(!confirm("共 "+list.length+" 个中国手机号待 AI 分析（使用授权码 "+validKey.keyId+"，身份："+identityText+"），预计需要 "+Math.ceil(list.length*2)+" 秒，开始？"))return;/* 进度弹窗 */const mask=document.createElement("div");mask.style.cssText="position:fixed;top:0;left:0;right:0;bottom:0;z-index:999;background:rgba(6,17,28,.5);display:flex;align-items:center;justify-content:center";mask.innerHTML='<div style="background:#fff;border-radius:14px;padding:24px 28px;min-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.25)"><h3 style="margin:0 0 12px;color:#0B1F33">AI 批量分析中</h3><div style="background:#e8eef5;border-radius:8px;height:8px;overflow:hidden;margin-bottom:10px"><div id="aiBatchBar" style="height:100%;background:linear-gradient(90deg,#F0A93B,#d4912a);width:0%;transition:width .3s"></div></div><div id="aiBatchMsg" style="font-size:13px;color:#52657A">准备中...</div></div>';document.body.appendChild(mask);const bar=mask.querySelector("#aiBatchBar");const msg=mask.querySelector("#aiBatchMsg");let done=0,fail=0;for(const item of list){try{const res=await api("/api/ai/analyze",{key:validKey.key,phone:item.phone,url:item.url||"",title:item.title||"",seller:item.seller||"",pageText:item.pageText||"",identity:identity});if(res&&res.ok){done++;}else{fail++;if(res&&res.message&&res.message.indexOf("次数")>=0){msg.textContent="AI 次数用完，已完成 "+done+" 个";break;}}}catch(e){fail++;}const pct=Math.round((done+fail)/list.length*100);bar.style.width=pct+"%";msg.textContent="进度："+(done+fail)+"/"+list.length+"（成功 "+done+"，失败 "+fail+"）";await new Promise(r=>setTimeout(r,1500));}msg.textContent="完成！成功 "+done+" 个，失败 "+fail+" 个";$("numMsg").textContent="AI 批量分析完成：成功 "+done+" 个，失败 "+fail+" 个";$("numMsg").className="msg";setTimeout(()=>{mask.remove();loadNumbers();},1500);}
+async function delNumbers(id){if(!confirm("删除这条号码记录？"))return;const res=await api("/api/numbers/delete",{ids:[id]});$("numMsg").textContent=res.message||"已删除";$("numMsg").className=res.ok?"msg":"msg err";loadNumbers();}
+async function clearNumbers(){if(!NUM_ITEMS.length){$("numMsg").textContent="号码库为空";return;}if(!confirm("确定清空号码库全部 "+NUM_ITEMS.length+" 条号码？此操作不可恢复！"))return;const res=await api("/api/numbers/clear");$("numMsg").textContent=res.message||"已清空";$("numMsg").className=res.ok?"msg":"msg err";loadNumbers();}
+function showNumAlert(total){const d=document.createElement("div");d.id="numAlertMask";d.style.cssText="position:fixed;top:0;left:0;right:0;bottom:0;z-index:999;background:rgba(6,17,28,.55);display:flex;align-items:center;justify-content:center";d.innerHTML='<div style="background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border-radius:16px;padding:22px 26px;max-width:400px;box-shadow:0 20px 60px rgba(11,31,51,.3);text-align:center"><h3 style="margin:0 0 10px;color:#0B1F33">号码库已达 '+total+' 个</h3><p style="margin:0 0 16px;color:#52657A;font-size:14px">建议尽快导出，避免号码堆积。导出后可清空号码库。</p><div style="display:flex;gap:10px;justify-content:center"><button class="okbtn num-alert-go">去导出</button><button class="sec num-alert-later">稍后</button></div></div>';const go=d.querySelector(".num-alert-go");if(go)go.onclick=function(){d.remove();const t=$("numTotalInput");if(t)t.scrollIntoView({behavior:"smooth"});loadNumbers();};const later=d.querySelector(".num-alert-later");if(later)later.onclick=function(){d.remove();};document.body.appendChild(d);}
+async function api(path,body){const r=await fetch("https://soft-roses-knock.loca.lt"+path,{method:"POST",headers:{"Content-Type":"application/json",...(token?{Authorization:"Bearer "+token}:{})},body:JSON.stringify(body||{})});return r.json();}
+function planName(p){return p==="trial"?"免费试用":p==="month"?"月卡":p==="pro"?"专业版":p==="lifetime"?"终身版":(p||"—");}
+function fmtTime(ts){if(!ts)return "";const d=new Date(ts);return (d.getMonth()+1)+"-"+d.getDate()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);}
+function fmtDevs(keyId, devs){return devs.map(d=>'<span class="dev">'+d.deviceId.slice(0,16)+' <i style="font-style:normal;color:#94a3b8">'+fmtTime(d.activatedAt)+'</i><button class="dev-btn" onclick="unbindDev(\\''+keyId+'\\',\\''+d.deviceId+'\\')" title="解绑该设备">解绑</button></span>').join(" ")||'<span class="muted">无</span>';}
+async function loadStats(){const res=await api("/api/stats");if(!res.ok)return;const s=res.stats;$("statsPanel").innerHTML=
+'<div class="stat"><b>'+s.totalKeys+'</b><span>授权记录总数</span></div>'+
+'<div class="stat"><b>'+s.activeKeys+'</b><span>有效授权</span></div>'+
+'<div class="stat"><b>'+s.revokedKeys+'</b><span>已吊销</span></div>'+
+'<div class="stat"><b>'+s.activatedKeys+'</b><span>已激活授权(有设备)</span></div>'+
+'<div class="stat"><b>'+s.totalDevices+'</b><span>激活设备总数</span></div>'+
+'<div class="stat"><b>'+s.online24h+'</b><span>24小时在线设备</span></div>'+
+'<div class="stat"><b>'+s.todayActivations+'</b><span>今日激活次数</span></div>'+
+'<div class="stat"><b>'+s.todayVerifies+'</b><span>今日校验次数</span></div>'+
+'<div class="stat"><b>'+s.activations+'</b><span>累计激活次数</span></div>'+
+'<div class="stat"><b>'+s.verifies+'</b><span>累计校验次数</span></div>'+
+'<div class="stat"><b>'+s.pointsLeft+'</b><span>当前点数余额(合计)</span></div>'+
+'<div class="stat rev"><b>¥'+s.revenue.today+'</b><span>每日收入(今日)</span></div>'+
+'<div class="stat rev"><b>¥'+s.revenue.month+'</b><span>每月收入(本月)</span></div>'+
+'<div class="stat rev"><b>¥'+s.revenue.year+'</b><span>今年收入</span></div>'+
+'<div class="stat rev"><b>¥'+s.revenue.total+'</b><span>总收入(累计)</span></div>'+
+'<div class="stat lan"><b>'+s.landing.today+'</b><span>落地页今日打开</span></div>'+
+'<div class="stat lan"><b>'+s.landing.total+'</b><span>落地页累计打开</span></div>'+
+'<div class="stat dlc"><b>'+s.downloads.today+'</b><span>安装包今日下载</span></div>'+
+'<div class="stat dlc"><b>'+s.downloads.total+'</b><span>安装包累计下载</span></div>'+
+'<div class="stat usr"><b>'+s.users.today+'</b><span>今日注册用户</span></div>'+
+'<div class="stat usr"><b>'+s.users.total+'</b><span>累计注册用户</span></div>'+
+'<div class="stat num"><b>'+s.numbers.total+'</b><span>号码库总数</span></div>'+
+'<div class="stat usr"><b>'+s.gift.invites+'</b><span>好礼码被使用(邀请)</span></div>'+
+'<div class="stat usr"><b>'+s.gift.redeems+'</b><span>好礼兑换成功(新用户)</span></div>'+
+'<div class="stat usr"><b>'+s.gift.points+'</b><span>好礼点数待转入(合计)</span></div>';
+if(s.numbers&&s.numbers.total>=500&&!sessionStorage.getItem("numAlertShown")){sessionStorage.setItem("numAlertShown","1");showNumAlert(s.numbers.total);}
+var daily=s.landing.daily||{},dh='<div style="margin-top:10px;font-size:12px;color:#64748b">落地页近7天打开：';
+for(var i=6;i>=0;i--){var dd=new Date();dd.setDate(dd.getDate()-i);var dk=dd.getFullYear()+"-"+("0"+(dd.getMonth()+1)).slice(-2)+"-"+("0"+dd.getDate()).slice(-2);dh+='<span style="background:#f1f5f9;border-radius:6px;padding:2px 7px;margin:0 4px 4px 0;display:inline-block">'+dk.slice(5)+' · '+(daily[dk]||0)+'</span>';}
+dh+='</div>';$("statsPanel").insertAdjacentHTML("beforeend",dh);}
+async function refresh(){const res=await api("/api/keys");if(!res.ok){$("listMsg").textContent=res.message||"加载失败";$("listMsg").className="msg err";return;}
+loadStats();
+loadNumbers();
+/* 身份选择持久化 */
+(function initAdminIdentity(){const sel=$("adminAiIdentity");if(!sel)return;try{const saved=localStorage.getItem("adminAiIdentity");if(saved)sel.value=saved;}catch(_e){}sel.addEventListener("change",()=>{try{localStorage.setItem("adminAiIdentity",sel.value);}catch(_e){}});})();
+/* 导出开发信选项持久化 */
+(function initAdminExportDraft(){const cb=$("adminExportDraft");if(!cb)return;try{const saved=localStorage.getItem("adminExportDraft");cb.checked=saved!=="false";}catch(_e){}cb.addEventListener("change",()=>{try{localStorage.setItem("adminExportDraft",cb.checked);}catch(_e){}});})();
+recordKeys={};
+const q=($("searchInput").value||"").trim().toLowerCase();
+$("keyRows").innerHTML=res.keys.sort((a,b)=>b.createdAt-a.createdAt).filter(k=>!q||[k.keyId,k.plan,k.name||"",k.exp].join(" ").toLowerCase().indexOf(q)>=0).map(k=>{
+  recordKeys[k.keyId]=k.key||"";
+  const expired=new Date(k.exp+"T23:59:59+08:00").getTime()<Date.now();
+  const noPoints=typeof k.points==="number"&&k.points<=0;
+  const status=k.revoked?'<span class="badge err">已吊销</span>':expired?'<span class="badge warn">已过期</span>':noPoints?'<span class="badge warn">额度用完</span>':'<span class="badge ok">有效</span>';
+  const pointsText=typeof k.points==="number"?(noPoints?'<span class="badge err">0</span>':k.points+' 点'):'不限';
+  const AI_QUOTA_FE={trial:1,month:5,pro:Infinity,lifetime:Infinity};
+  const aiLimit=(AI_QUOTA_FE[k.plan]===Infinity)?null:AI_QUOTA_FE[k.plan];
+  const aiUsed=k.aiUsed||0;
+  const aiLeft=aiLimit===null?'<span class="badge ok">不限</span>':(aiUsed>=aiLimit?'<span class="badge err">0</span>':(aiLimit-aiUsed)+' 次');
+  const restore=k.revoked?'<button class="okbtn" onclick="unrevoke(\\''+k.keyId+'\\')">恢复</button>':'<button class="okbtn" disabled title="当前有效，吊销后才需要恢复">恢复</button>';
+  return '<tr><td>'+k.keyId+'</td><td>'+planName(k.plan)+'</td><td>'+(k.name||"—")+'</td><td>'+(k.exp==="2099-12-31"?"终身":k.exp)+'</td><td>'+k.devices.length+'/'+k.maxDev+'</td><td>'+fmtDevs(k.keyId,k.devices)+'</td><td>'+pointsText+'</td><td>'+aiLeft+'</td><td>'+status+'</td>'+
+  '<td>'+restore+' <button class="danger" onclick="revoke(\\''+k.keyId+'\\')">吊销</button> '+
+  '<button class="okbtn" onclick="extendKey(\\''+k.keyId+'\\')">续费</button> '+
+  '<button class="okbtn" onclick="upgradeKey(\\''+k.keyId+'\\')">升级</button> '+
+  '<button class="sec" onclick="rechargeKey(\\''+k.keyId+'\\')">充值</button> '+
+  (k.devices.length?'<button class="sec" onclick="unbind(\\''+k.keyId+'\\')">解绑全部</button>':'')+
+  ' <button class="sec" onclick="copyRecordKey(\\''+k.keyId+'\\')">复制码</button> '+
+  '<button class="danger" onclick="delKey(\\''+k.keyId+'\\')">删除</button></td></tr>';
+}).join("");$("listMsg").textContent="已刷新 "+(res.keys||[]).length+" 条授权记录";$("listMsg").className="msg ok";}
+async function loadPricing(){const res=await api("/api/pay-info");if(!res.ok)return;const p=res.pricing||{};
+const el=(id,v)=>{const n=$(id);if(n&&v!==undefined&&v!==null)n.value=v;};
+el("p_trial_price",p.trial&&p.trial.price);el("p_trial_days",p.trial&&p.trial.days);el("p_trial_points",p.trial&&p.trial.points);el("p_trial_desc",p.trial&&p.trial.desc);
+el("p_month_price",p.month&&p.month.price);el("p_month_days",p.month&&p.month.days);el("p_month_desc",p.month&&p.month.desc);
+el("p_pro_price",p.pro&&p.pro.price);el("p_pro_days",p.pro&&p.pro.days);el("p_pro_points",p.pro&&p.pro.points);el("p_pro_desc",p.pro&&p.pro.desc);
+el("p_lifetime_price",p.lifetime&&p.lifetime.price);el("p_lifetime_days",p.lifetime&&p.lifetime.days);el("p_lifetime_points",p.lifetime&&p.lifetime.points);el("p_lifetime_desc",p.lifetime&&p.lifetime.desc);
+el("p_month_export",res.exportLimit);
+const show=(id,url)=>{const img=$(id);if(img&&url){img.src=url;img.style.display="block";}else if(img){img.style.display="none";}};
+show("alipayPreview",res.payCodes&&res.payCodes.alipay?res.payCodes.alipay:"");show("wechatPreview",res.payCodes&&res.payCodes.wechat?res.payCodes.wechat:"");}
+async function savePricing(){const g=id=>$(id).value;const pricing={trial:{price:g("p_trial_price"),days:g("p_trial_days"),points:g("p_trial_points"),desc:g("p_trial_desc")},month:{price:g("p_month_price"),days:g("p_month_days"),points:0,desc:g("p_month_desc")},pro:{price:g("p_pro_price"),days:g("p_pro_days"),points:g("p_pro_points"),desc:g("p_pro_desc")},lifetime:{price:g("p_lifetime_price"),days:g("p_lifetime_days"),points:0,desc:g("p_lifetime_desc")}};const res=await api("/api/save-pricing",{pricing});$("pricingMsg").textContent=res.message||"完成";$("pricingMsg").className=res.ok?"msg ok":"msg err";}
+async function saveExportLimit(){const res=await api("/api/save-export-limit",{month:$("p_month_export").value});$("pricingMsg").textContent=res.message||"完成";$("pricingMsg").className=res.ok?"msg ok":"msg err";}
+async function uploadPayCode(type){const input=$(type==="alipay"?"alipayFile":"wechatFile");const file=input&&input.files&&input.files[0];if(!file){$("paycodeMsg").textContent="请先选择图片";$("paycodeMsg").className="msg err";return;}const reader=new FileReader();reader.onload=async()=>{const res=await api("/api/upload-paycode",{type,data:reader.result});$("paycodeMsg").textContent=res.message||"完成";$("paycodeMsg").className=res.ok?"msg ok":"msg err";if(res.ok)loadPricing();};reader.readAsDataURL(file);}
+async function uploadAiAvatar(){const input=$("aiAvatarFile");const file=input&&input.files&&input.files[0];if(!file){$("aiAvatarMsg").textContent="请先选择图片";$("aiAvatarMsg").className="msg err";return;}const reader=new FileReader();reader.onload=async()=>{const res=await api("/api/upload-ai-avatar",{data:reader.result});$("aiAvatarMsg").textContent=res.message||"完成";$("aiAvatarMsg").className=res.ok?"msg ok":"msg err";if(res.ok&&res.avatarUrl)$("aiAvatarPreview").src=res.avatarUrl;};reader.readAsDataURL(file);}
+async function loadOrders(){const res=await api("/api/orders");$("orderRows").innerHTML="";if(!res.ok){$("orderMsg").textContent=res.message||"加载失败";$("orderMsg").className="msg err";return;}orderCache=res.orders||[];const rows=(res.orders||[]).map(o=>{
+const t=o.type==="recharge"?"充值点数":"购买套餐";
+const spec=o.type==="recharge"?(o.points+" 点"):(planName(o.plan)+(o.plan==="lifetime"?"":" / "+o.days+"天")+(o.plan==="pro"?" / "+o.points+"点":""));
+const pay=o.payMethod==="wechat"?"微信":"支付宝";
+const st=o.status==="pending"?'<span class="badge warn">待审核</span>':o.status==="approved"?'<span class="badge ok">已通过</span>':'<span class="badge err">已拒绝</span>';
+const aiMatch=o.aiMatch||"<span style='color:#94a3b8'>识别中...</span>";
+const ops=(o.status==="pending"?'<button class="okbtn" onclick="approveOrder(\\''+o.id+'\\')">通过并发权益</button> <button class="danger" onclick="rejectOrder(\\''+o.id+'\\')">拒绝</button>':"")+'<button class="sec" onclick="editOrder(\\''+o.id+'\\')">编辑</button> <button class="danger" onclick="delOrder(\\''+o.id+'\\')">删除</button>';
+return '<tr><td>'+o.id+'</td><td>'+o.keyId+'</td><td>'+t+'</td><td>'+spec+'</td><td>¥'+(Number(o.amount)||0)+'</td><td style="font-size:12px">'+aiMatch+'</td><td>'+pay+'</td><td>'+(o.screenshot?'<button class="sec" onclick="viewOrderShot(\\''+o.id+'\\')">查看截图</button>':'—')+'</td><td>'+fmtTime(o.createdAt)+'</td><td>'+st+'</td><td>'+ops+'</td></tr>';
+}).join("")||'<tr><td colspan="11" class="muted">暂无订单</td></tr>';
+$("orderRows").innerHTML=rows;}
+let orderCache=[];
+async function viewOrderShot(orderId){
+  try{
+    const o=(orderCache||[]).find(x=>x.id===orderId);
+    if(!o){alert("订单不存在，请先刷新订单列表");return;}
+    if(!o.screenshot){alert("该订单没有上传截图");return;}
+    const img=$("shotImg");
+    if(!img){alert("截图组件未就绪，请刷新页面后重试");return;}
+    img.onload=function(){img.onerror=null;};
+    img.onerror=function(){alert("截图文件损坏或格式不支持，请让客户重新上传");};
+    img.src=o.screenshot;
+    $("shotLabel").textContent="（"+orderId+"）";
+    openModal("shotModal");
+  }catch(e){alert("查看截图失败："+(e&&e.message?e.message:e));}
+}
+async function reviewOrder(orderId,action){const msg=action==="approve"?"确认通过该订单？通过后按订单内容自动发放权益（客户在线下次校验生效）":"确认拒绝该订单？";if(!confirm(msg))return;const res=await api("/api/payorder/review",{orderId,action});$("orderMsg").textContent=res.message||"完成";$("orderMsg").className=res.ok?"msg ok":"msg err";if(res.ok)loadOrders();}
+let recordKeys={};
+async function copyRecordKey(keyId){const txt=recordKeys[keyId]||"";if(!txt){$("listMsg").textContent="未找到授权码";$("listMsg").className="msg err";return;}let done=false;try{await navigator.clipboard.writeText(txt);done=true;}catch(e){try{const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();done=document.execCommand("copy");document.body.removeChild(ta);}catch(e2){done=false;}}
+$("listMsg").textContent=done?("已复制 "+keyId+" 的授权码"):"复制失败，请手动复制";$("listMsg").className=done?"msg ok":"msg err";}
+let eoTarget='';
+async function editOrder(orderId){eoTarget=orderId;const res=await api("/api/orders");const o=(res.orders||[]).find(x=>x.id===orderId);if(!o){alert("订单不存在");return;}$("eoLabel").textContent='（'+orderId+'）';$("eoPlan").value=o.plan||"month";$("eoDays").value=(o.days||0);$("eoPoints").value=(o.points||0);$("eoAmount").value=(o.amount||0);$("eoMsg").textContent='';$("eoMsg").className="msg";openModal("editOrderModal");}
+async function eoOk(){if(!eoTarget)return;const res=await api("/api/payorder/update",{orderId:eoTarget,plan:$("eoPlan").value,days:$("eoDays").value,points:$("eoPoints").value,amount:$("eoAmount").value});$("eoMsg").textContent=res.message||"完成";$("eoMsg").className="msg "+(res.ok?"ok":"err");if(res.ok){setTimeout(()=>closeModal("editOrderModal"),1200);loadOrders();}}
+async function delOrder(orderId){if(!confirm("确认删除订单 "+orderId+"？已发放的权益不受影响"))return;const res=await api("/api/payorder/delete",{orderId});$("orderMsg").textContent=res.message||"完成";$("orderMsg").className=res.ok?"msg ok":"msg err";if(res.ok)loadOrders();}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function fmtDay(ts){if(!ts)return"—";const d=new Date(ts);return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);}
+async function loadUsers(){
+  const res=await api("/api/users");
+  const tb=$("userRows");tb.innerHTML="";
+  if(!res.ok){$("userMsg").textContent=res.message||"加载失败";$("userMsg").className="msg err";return;}
+  $("userMsg").textContent="";
+  userCache=res.users||[];
+  fillUserSelect();
+  filterUsers();
+}
+function fillUserSelect(){
+  const sel=$("genUser");if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">不绑定</option>'+userCache.map(u=>'<option value="'+u.id+'">'+esc(u.name)+' ('+esc(u.account)+')</option>').join("");
+  if(cur)sel.value=cur;
+}
+function filterUsers(){
+  const tb=$("userRows");if(!tb)return;
+  const q=($("userSearchInput").value||"").trim().toLowerCase();
+  const users=userCache.filter(u=>!q||[u.name,u.account,u.authCode].join(" ").toLowerCase().indexOf(q)>=0);
+  if(!users.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;color:#94a3b8;padding:14px">'+(userCache.length?"没有匹配的用户":"暂无注册用户，客户在落地页注册后显示在这里")+'</td></tr>';return;}
+  tb.innerHTML=users.map(u=>{
+    const av=u.avatar?'<img src="'+u.avatar+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px">':'';
+    const planTxt=u.authCode?(planName(u.plan)+(u.revoked?' <span style="color:#dc2626">已吊销</span>':'')):"—";
+    return '<tr><td>'+av+'<b>'+esc(u.name)+(u.disabled?' <span style="color:#dc2626;font-size:12px">[已注销]</span>':'')+'</b></td><td>'+esc(u.account)+'</td><td>'+fmtDay(u.createdAt)+'</td><td>'+fmtDay(u.lastLoginAt)+'</td><td>'+u.loginCount+'</td><td>'+(u.authCode?u.authCode:"—")+'</td><td>'+planTxt+'</td><td>'+(u.authCode?u.points:"—")+'</td><td>'+fmtDay(u.expireAt)+'</td><td>'+(u.authCode?u.devices:"—")+'</td><td>'+(u.authCode?u.verifyCount:"—")+'</td><td style="white-space:nowrap"><input id="bindCode_'+u.id+'" type="text" placeholder="授权ID或完整码" style="width:100px;padding:4px 6px"><button onclick="adminBind(\\''+u.id+'\\')" style="margin-left:4px">绑定</button>'+(u.authCode?'<button onclick="adminUnbind(\\''+u.id+'\\')" style="margin-left:4px;background:#fee2e2;color:#b91c1c;border:none;border-radius:5px;padding:5px 8px;cursor:pointer">解绑</button>':'')+'<button onclick="adminDeactivate(\\''+u.id+'\\')" style="margin-left:4px;'+(u.disabled?'background:#dcfce7;color:#15803d':'background:#fef9c3;color:#a16207')+';border:none;border-radius:5px;padding:5px 8px;cursor:pointer">'+(u.disabled?'恢复':'注销')+'</button><button onclick="adminDelete(\\''+u.id+'\\')" style="margin-left:4px;background:#fee2e2;color:#b91c1c;border:none;border-radius:5px;padding:5px 8px;cursor:pointer">删除</button></td></tr>';
+  }).join("");
+}
+async function adminBind(userId){
+  const inp=$("bindCode_"+userId);
+  const code=((inp&&inp.value)||"").trim();
+  if(!code){alert("请先填写要绑定的授权ID或授权码");return;}
+  const res=await api("/api/user/admin-bind",{userId,authCode:code});
+  $("userMsg").textContent=res.message||"完成";$("userMsg").className=res.ok?"msg ok":"msg err";
+  if(inp)inp.value="";
+  alert((res.ok?"绑定成功：":"绑定失败：")+(res.message||""));
+  if(res.ok)loadUsers();
+}
+async function adminUnbind(userId){
+  if(!confirm("确定解绑该用户与授权码的绑定关系？"))return;
+  const res=await api("/api/user/admin-unbind",{userId});
+  $("userMsg").textContent=res.message||"完成";$("userMsg").className=res.ok?"msg ok":"msg err";
+  alert((res.ok?"解绑成功：":"解绑失败：")+(res.message||""));
+  if(res.ok)loadUsers();
+}
+async function adminDeactivate(userId){
+  const u=userCache.find(x=>x.id===userId);
+  const isDis=u&&u.disabled;
+  if(!confirm((isDis?"确定恢复该用户账号？":"确定注销该用户？注销后该账号无法登录与下载，绑定关系保留")))return;
+  const res=await api("/api/user/admin-deactivate",{userId,disabled:!isDis});
+  $("userMsg").textContent=res.message||"完成";$("userMsg").className=res.ok?"msg ok":"msg err";
+  alert((res.ok?"操作成功：":"操作失败：")+(res.message||""));
+  if(res.ok)loadUsers();
+}
+async function adminDelete(userId){
+  if(!confirm("确定彻底删除该用户？删除后账号与授权码绑定都会解除，不可恢复！"))return;
+  const res=await api("/api/user/admin-delete",{userId});
+  $("userMsg").textContent=res.message||"完成";$("userMsg").className=res.ok?"msg ok":"msg err";
+  alert((res.ok?"删除成功：":"删除失败：")+(res.message||""));
+  if(res.ok)loadUsers();
+}
+async function loadPluginInfo(){
+  const res=await api("/api/plugin/version");
+  if(!res.ok)return;
+  $("pvVersion").value=res.versionName||"";
+  $("pvUrl").value=res.downloadUrl||"";
+  $("pvNotice").value=res.notice||"";
+}
+async function saveNotice(){
+  const btn=document.querySelector("#adminCard .row button")||{};
+  btn.disabled=true;$("pvMsg").textContent="发布中，正在重建下载包…";$("pvMsg").style.color="#b45309";
+  const res=await api("/api/plugin/notice",{text:$("pvNotice").value});
+  $("pvMsg").textContent=res.message||"完成";$("pvMsg").style.color=res.ok?"#16a34a":"#dc2626";
+  btn.disabled=false;
+  loadPluginInfo();
+}
+$("genBtn").onclick=async()=>{
+  const res=await api("/api/generate",{plan:$("plan").value,days:$("days").value,points:$("points").value,maxDev:$("maxDev").value,name:$("name").value,userId:$("genUser").value});
+  if(res.ok){
+    $("genResult").innerHTML='<div class="key-box"><b>授权码：</b>'+res.key+'<button onclick="copyKey(\\''+res.key+'\\')" style="margin-left:6px">复制</button>'+(res.boundUser?'<div class="muted" style="margin-top:4px">已自动绑定用户：'+esc(res.boundUser)+'</div>':'')+'</div>';
+    refresh();loadUsers();
+  }else{$("genResult").innerHTML='<p class="msg err">'+esc(res.message)+'</p>';}
+};
+async function delKey(keyId){if(!confirm("确认删除授权记录 "+keyId+"？\\n\\n注意：删除后列表不再显示，但客户本地授权仍有效；若客户重新激活会重建记录。如需让客户立即停用，请使用吊销。"))return;const res=await api("/api/delete",{keyId});$("listMsg").textContent=res.message||"完成";$("listMsg").className=res.ok?"msg ok":"msg err";refresh();}
+async function revoke(keyId){if(!confirm("确认吊销 "+keyId+"？吊销后在线客户将无法继续使用"))return;const res=await api("/api/revoke",{keyId});$("listMsg").textContent=res.message||"完成";$("listMsg").className=res.ok?"msg ok":"msg err";refresh();}
+async function unrevoke(keyId){if(!confirm("确认恢复 "+keyId+"？恢复后客户可继续使用（设备列表保留）"))return;const res=await api("/api/unrevoke",{keyId});$("listMsg").textContent=res.message||"完成";$("listMsg").className=res.ok?"msg ok":"msg err";refresh();}
+async function unbind(keyId){if(!confirm("确认解绑 "+keyId+" 的全部设备？解绑后设备数腾出，客户需要重新激活"))return;const res=await api("/api/unbind",{keyId});$("listMsg").textContent=res.message||"完成";$("listMsg").className=res.ok?"msg ok":"msg err";refresh();}
+async function unbindDev(keyId,deviceId){if(!confirm("确认解绑 "+keyId+" 的设备 "+deviceId.slice(0,16)+"…？该设备将无法在线校验，客户重新激活可再次绑定"))return;const res=await api("/api/unbind",{keyId,deviceId});$("listMsg").textContent=res.message||"完成";$("listMsg").className=res.ok?"msg ok":"msg err";refresh();}
+async function extendKey(keyId){const days=prompt("为 "+keyId+" 续费多少天？\\n（在现有到期日基础上增加；已过期则从今天起算）","30");if(!days)return;const n=parseInt(days,10);if(!n||n<1){alert("请输入有效天数（≥1）");return;}const res=await api("/api/extend",{keyId,days:n});$("listMsg").textContent=res.message||"完成";$("listMsg").className=res.ok?"msg ok":"msg err";if(res.ok&&res.key){recordKeys[keyId]=res.key;$("listMsg").textContent+=" 新授权码已更新（点「复制码」可复制发给客户）";}refresh();}
+let upTarget='';let rcTarget='';
+async function openModal(id){const m=$(id);if(m)m.style.display='flex';}
+async function closeModal(id){const m=$(id);if(m)m.style.display='none';}
+async function upgradeKey(keyId){upTarget=keyId;$('upKeyLabel').textContent='（'+keyId+'）';$('upMsg').textContent='';openModal('upModal');}
+async function rechargeKey(keyId){rcTarget=keyId;$('rcKeyLabel').textContent='（'+keyId+'）';$('rcMsg').textContent='';openModal('rcModal');}
+async function upOk(){if(!upTarget)return;const plan=$('upPlan').value;const days=parseInt($('upDays').value,10)||0;const ptsVal=$('upPoints').value;const points=ptsVal===''?undefined:(parseInt(ptsVal,10)||0);const res=await api('/api/upgrade',{keyId:upTarget,plan,days,points});$('upMsg').textContent=res.message||'完成';$('upMsg').className='msg '+(res.ok?'ok':'err');if(res.ok&&res.key){recordKeys[upTarget]=res.key;$('upMsg').textContent+=' 新授权码已更新（点「复制码」可复制发给客户）';setTimeout(()=>closeModal('upModal'),1400);refresh();}}
+async function rcOk(){if(!rcTarget)return;const points=parseInt($('rcPoints').value,10)||0;const res=await api('/api/recharge',{keyId:rcTarget,points});$('rcMsg').textContent=res.message||'完成';$('rcMsg').className='msg '+(res.ok?'ok':'err');if(res.ok&&res.key){recordKeys[rcTarget]=res.key;$('rcMsg').textContent+=' 新授权码已更新（点「复制码」可复制发给客户）';setTimeout(()=>closeModal('rcModal'),1400);refresh();}}
+async function copyKey(){const el=document.getElementById("genKeyBox");if(!el)return;const txt=el.textContent.trim();let done=false;try{await navigator.clipboard.writeText(txt);done=true;}catch(e){try{const ta=document.createElement("textarea");ta.value=txt;document.body.appendChild(ta);ta.select();done=document.execCommand("copy");document.body.removeChild(ta);}catch(e2){done=false;}}
+const m=document.getElementById("copyMsg");if(m){m.textContent=done?"✓ 已复制，直接发给客户即可":"复制失败，请手动选中授权码复制";m.className="msg "+(done?"ok":"err");}}
+$("loginBtn").onclick=async()=>{const res=await api("/api/login",{password:$("pwd").value});if(res.ok){token=res.token;localStorage.setItem("lic_token",token);$("loginCard").style.display="none";$("adminCard").style.display="block";$("adminExtra").style.display="block";$("hostTip").textContent="后台地址: "+location.origin;refresh();loadPricing();loadOrders();loadUsers();loadPluginInfo();}else{$("loginMsg").textContent=res.message||"口令错误";$("loginMsg").className="msg err";}};
+$("logoutBtn").onclick=()=>{token="";localStorage.removeItem("lic_token");$("loginCard").style.display="block";$("adminCard").style.display="none";$("adminExtra").style.display="none";};
+$("refreshKeysBtn").onclick=refresh;
+setInterval(()=>{if(token)refresh();},10000);
+$("genBtn").onclick=async()=>{const res=await api("/api/generate",{plan:$("plan").value,days:$("days").value,name:$("name").value,maxDev:$("maxDev").value,points:$("points").value});if(res.ok){$("genResult").innerHTML='<div class="key-box" id="genKeyBox">'+res.key+'</div><div class="row mt8"><button id="copyKeyBtn">一键复制授权码</button></div><p class="msg ok" id="copyMsg">已生成：'+res.info.kid+' · '+planName(res.info.plan)+' · 到期 '+(res.info.exp==="2099-12-31"?"终身":res.info.exp)+' · 允许 '+res.info.maxDev+' 台设备 · 点数 '+(typeof res.info.points==="number"?res.info.points+" 点":"不限")+'</p>';document.getElementById("copyKeyBtn").onclick=copyKey;refresh();}else{$("genResult").innerHTML='<p class="msg err">'+(res.message||"生成失败")+'</p>';}};
+(async()=>{if(token){$("loginCard").style.display="none";$("adminCard").style.display="block";$("adminExtra").style.display="block";$("hostTip").textContent="后台地址: "+location.origin;const res=await api("/api/keys");if(!res.ok){token="";localStorage.removeItem("lic_token");$("loginCard").style.display="block";$("adminCard").style.display="none";$("adminExtra").style.display="none";}else{refresh();loadPricing();loadOrders();loadUsers();loadPluginInfo();}}})();
+let orderWatchCount=-1;let orderWatchSeen={};
+async function watchOrders(){if(!token)return;try{const res=await api("/api/orders");if(!res.ok)return;const pend=res.orders.filter(o=>o.status==="pending");for(const o of pend){if(orderWatchCount>=0&&!orderWatchSeen[o.id]){const el=document.getElementById("orderAlert");if(el){el.style.display="flex";el.querySelector(".alert-title").textContent="新充值订单待审核";el.querySelector(".alert-detail").textContent=o.id+" · "+o.keyId+" · "+(o.type==="recharge"?(o.points+" 点"):planName(o.plan))+" · ¥"+(Number(o.amount)||0);const go=el.querySelector(".alert-go");if(go)go.onclick=()=>{el.style.display="none";document.getElementById("orderRows").scrollIntoView({behavior:"smooth",block:"center"});loadOrders();};}}orderWatchSeen[o.id]=1;}if(orderWatchCount<0&&pend.length>0){for(const o of pend)orderWatchSeen[o.id]=1;}orderWatchCount=pend.length;}catch(_e){}}
+setInterval(watchOrders,15000);setTimeout(watchOrders,3000);
+</script>
+<div id="upModal" class="modal">
+  <div class="modal-box">
+    <h3>升级套餐 <span class="muted" id="upKeyLabel"></span></h3>
+    <label>新套餐</label>
+    <select id="upPlan"><option value="trial">免费试用（3天/30个号码）</option><option value="month">月卡（按时间畅采，不限点数）</option><option value="pro">专业版（按量扣点）</option><option value="lifetime">终身版（无时间限制，不限点数）</option></select>
+    <label>时长（天）<span class="muted">终身版填 0</span></label>
+    <input id="upDays" type="number" min="0" value="30">
+    <label>点数 <span class="muted">专业版/试用填点数；月卡/终身自动不限</span></label>
+    <input id="upPoints" type="number" min="0" value="100">
+    <div class="row"><button id="upOk" style="flex:1" onclick="upOk()">确认升级</button><button class="sec" id="upCancel" style="flex:1" onclick="closeModal('upModal')">取消</button></div>
+    <p class="msg" id="upMsg"></p>
+  </div>
+</div>
+<div id="rcModal" class="modal">
+  <div class="modal-box">
+    <h3>充值点数 <span class="muted" id="rcKeyLabel"></span></h3>
+    <label>充值点数（1 点 = 采到 1 个有效号码）</label>
+    <input id="rcPoints" type="number" min="1" value="100">
+    <div class="row"><button id="rcOk" style="flex:1" onclick="rcOk()">确认充值</button><button class="sec" id="rcCancel" style="flex:1" onclick="closeModal('rcModal')">取消</button></div>
+    <p class="msg" id="rcMsg"></p>
+  </div>
+</div>
+<div id="editOrderModal" class="modal">
+  <div class="modal-box">
+    <h3>编辑订单 <span class="muted" id="eoLabel"></span></h3>
+    <label>套餐</label>
+    <select id="eoPlan"><option value="trial">免费试用</option><option value="month">月卡</option><option value="pro">专业版</option><option value="lifetime">终身版</option></select>
+    <label>时长（天，终身版填 0）</label>
+    <input id="eoDays" type="number" min="0" value="30">
+    <label>点数（专业版/试用）</label>
+    <input id="eoPoints" type="number" min="0" value="0">
+    <label>金额（元）</label>
+    <input id="eoAmount" type="number" min="0" step="0.01" value="0">
+    <div class="row"><button id="eoOk" style="flex:1" onclick="eoOk()">保存修改</button><button class="sec" style="flex:1" onclick="closeModal('editOrderModal')">取消</button></div>
+    <p class="msg" id="eoMsg"></p>
+  </div>
+<div id="orderAlert" class="modal" style="display:none">
+  <div class="modal-box">
+    <h3 class="alert-title">新充值订单待审核</h3>
+    <p class="alert-detail"></p>
+    <div class="row"><button class="okbtn alert-go" style="flex:1">去审核</button><button class="sec" style="flex:1" onclick="document.getElementById('orderAlert').style.display='none'">稍后</button></div>
+  </div>
+</div>
+<div id="shotModal" class="modal">
+  <div class="modal-box">
+    <h3>支付截图 <span class="muted" id="shotLabel"></span></h3>
+    <img id="shotImg" style="max-width:100%;border-radius:6px" alt="支付截图">
+    <div class="row"><button class="sec" style="flex:1" onclick="closeModal('shotModal')">关闭</button></div>
+  </div>
+</div>
+</body></html>
+
